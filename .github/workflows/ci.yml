@@ -63,7 +63,7 @@ jobs:
           echo "CMAKE_EXTRA_ARGS=-DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT//\\//}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows" >> "$GITHUB_ENV"
 
       - name: Cache CMake build dir
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build/cmake/${{ matrix.rid }}
           key: cmake-${{ matrix.rid }}-${{ hashFiles('headsetcontrollib/CMakeLists.txt', 'headsetcontrollib/lib/**/*.cpp', 'headsetcontrollib/lib/**/*.hpp', 'headsetcontrollib/lib/**/*.h', 'headsetcontrollib/vcpkg.json') }}
@@ -121,7 +121,7 @@ jobs:
           path: build/native/${{ matrix.rid }}/
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props') }}
