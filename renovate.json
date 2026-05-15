@@ -8,6 +8,10 @@
   "additionalReviewers": [
     "@manuelmayer-dev"
   ],
+  "enabledManagers": ["git-submodules"],
+  "git-submodules": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchDatasources": [
