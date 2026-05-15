@@ -27,12 +27,8 @@
       "stabilityDays": 0
     },
     {
-      "matchManagers": [
-        "git-submodules"
-      ],
-      "matchSourceUrlPrefixes": [
-        "https://github.com/Sapd/HeadsetControl"
-      ],
+      "matchManagers": ["git-submodules"],
+      "matchDepNames": ["headsetcontrollib"],
       "groupName": "headsetcontrol",
       "stabilityDays": 3
     }
