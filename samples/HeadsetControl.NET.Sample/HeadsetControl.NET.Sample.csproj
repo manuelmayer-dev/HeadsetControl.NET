@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>HeadsetControl.NET.Sample</RootNamespace>
+        <AssemblyName>HeadsetControl.NET.Sample</AssemblyName>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\HeadsetControl.NET\HeadsetControl.NET.csproj" />
+    </ItemGroup>
+
+</Project>

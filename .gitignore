@@ -1,0 +1,35 @@
+# Build output
+bin/
+obj/
+out/
+[Bb]uild/[Cc]make/
+[Bb]uild/[Nn]ative/
+
+# IDEs
+.idea/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+riderModule.iml
+_ReSharper.Caches/
+.claude
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# NuGet
+/packages/
+*.nupkg
+*.snupkg
+
+# Coverage
+[Cc]overage/
+*.coverage
+*.coveragexml
+TestResults/
+
+# .NET tools
+.config/dotnet-tools.json.bak

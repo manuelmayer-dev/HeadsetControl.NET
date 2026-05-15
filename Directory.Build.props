@@ -1,0 +1,53 @@
+<Project>
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+        <AnalysisLevel>latest</AnalysisLevel>
+        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+        <NoWarn>$(NoWarn);CA1014;CA1303</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Company>HeadsetControl.NET Contributors</Company>
+        <Authors>HeadsetControl.NET Contributors</Authors>
+        <Product>HeadsetControl.NET</Product>
+        <Copyright>Copyright (C) HeadsetControl.NET Contributors</Copyright>
+        <PackageProjectUrl>https://github.com/Sapd/HeadsetControl</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Sapd/HeadsetControl</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <Version>0.1.0</Version>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <SupportedRuntimeIdentifiers>osx-arm64;linux-arm64;linux-x64;win-x64</SupportedRuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)LICENSE"
+              Pack="true"
+              PackagePath="\"
+              Visible="false"
+              Condition="Exists('$(MSBuildThisFileDirectory)LICENSE')" />
+    </ItemGroup>
+
+</Project>

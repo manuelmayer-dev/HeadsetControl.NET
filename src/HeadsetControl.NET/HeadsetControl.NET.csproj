@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>HeadsetControl.NET</RootNamespace>
+        <AssemblyName>HeadsetControl.NET</AssemblyName>
+
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsAotCompatible>true</IsAotCompatible>
+        <IsTrimmable>true</IsTrimmable>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+
+        <Description>Idiomatic, cross-platform .NET wrapper for the HeadsetControl native library. Supports macOS (arm64), Linux (arm64 + x64), and Windows (x64).</Description>
+        <PackageId>HeadsetControl.NET</PackageId>
+        <PackageTags>headset;usb;hid;audio;steelseries;logitech;hyperx;corsair;cross-platform</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\HeadsetControl.NET.Native\HeadsetControl.NET.Native.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="HeadsetControl.NET.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
+
+</Project>
