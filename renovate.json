@@ -26,14 +26,6 @@
       ],
       "groupName": "dotnet",
       "stabilityDays": 0
-    },
-    {
-      "matchManagers": ["git-submodules"],
-      "matchSourceUrls": ["https://github.com/Sapd/HeadsetControl.git"],
-      "matchDepNames": ["headsetcontrollib"],
-      "groupName": "headsetcontrol",
-      "enabled": true,
-      "stabilityDays": 3
     }
   ]
 }
