@@ -33,7 +33,7 @@
         <PackageProjectUrl>https://github.com/manuelmayer-dev/HeadsetControl.NET</PackageProjectUrl>
         <RepositoryUrl>https://github.com/manuelmayer-dev/HeadsetControl.NET</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageLicenseExpression>GPL-3.0</PackageLicenseExpression>
+        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Version>0.2.0</Version>
     </PropertyGroup>
