@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.2.3, without v-prefix).'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - id: resolve
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            VERSION="${TAG#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          if [[ -z "$VERSION" ]]; then
+            echo "error: empty version" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+  build-native:
+    needs: version
+    uses: ./.github/workflows/reusable-build-native.yml
+
+  test:
+    needs: [version, build-native]
+    uses: ./.github/workflows/reusable-test.yml
+
+  pack:
+    needs: [version, test]
+    uses: ./.github/workflows/reusable-pack.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  publish:
+    needs: pack
+    uses: ./.github/workflows/reusable-nuget-publish.yml
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
