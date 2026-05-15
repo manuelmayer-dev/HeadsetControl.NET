@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>HeadsetControl.NET.Tests</RootNamespace>
+        <AssemblyName>HeadsetControl.NET.Tests</AssemblyName>
+
+        <IsPackable>false</IsPackable>
+        <IsPublishable>false</IsPublishable>
+        <IsTestProject>true</IsTestProject>
+
+        <!-- Tests don't need to be AOT-clean. -->
+        <IsAotCompatible>false</IsAotCompatible>
+        <IsTrimmable>false</IsTrimmable>
+
+        <!--
+            Test-method naming conventions intentionally use underscores
+            (CA1707) and helpers are commonly written as instance methods
+            for readability (CA1822). xUnit fixtures must be public (CA1515)
+            and collection-fixture marker types conventionally end in
+            "Collection" (CA1711). Inline test arrays do not benefit from
+            being hoisted to static fields (CA1861). Tests do not require
+            XML doc comments (CS1591).
+        -->
+        <NoWarn>$(NoWarn);CA1707;CA1822;CA1515;CA1711;CA1861;CS1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\HeadsetControl.NET\HeadsetControl.NET.csproj" />
+        <ProjectReference Include="..\..\src\HeadsetControl.NET.Native\HeadsetControl.NET.Native.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="Xunit.SkippableFact" />
+        <PackageReference Include="coverlet.collector" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+</Project>

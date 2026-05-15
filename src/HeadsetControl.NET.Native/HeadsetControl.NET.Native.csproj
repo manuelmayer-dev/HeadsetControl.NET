@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>HeadsetControl.NET.Native</RootNamespace>
+        <AssemblyName>HeadsetControl.NET.Native</AssemblyName>
+
+        <!--
+            P/Invoke uses LibraryImport source generators (NativeAOT-compatible).
+            Enable the analyzer-driven safety checks.
+        -->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsAotCompatible>true</IsAotCompatible>
+        <IsTrimmable>true</IsTrimmable>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+
+        <Description>Native P/Invoke bindings for the HeadsetControl C library. Internal infrastructure for HeadsetControl.NET — application code should consume HeadsetControl.NET instead.</Description>
+        <PackageId>HeadsetControl.NET.Native</PackageId>
+    </PropertyGroup>
+
+    <!--
+        Native binaries (libheadsetcontrol.dylib / .so / .dll) are produced by
+        the CMake driver into build/native/<rid>/. We pick up every RID folder
+        present and project it into the standard NuGet runtimes/<rid>/native/
+        layout — so consuming projects automatically resolve the correct
+        binary for their target RID.
+    -->
+    <ItemGroup>
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/libheadsetcontrol.dylib" />
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/libheadsetcontrol.so" />
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/headsetcontrol.dll" />
+
+        <Content Include="@(_HscNativeArtifact)"
+                 Link="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)"
+                 CopyToOutputDirectory="PreserveNewest"
+                 Pack="true"
+                 PackagePath="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="HeadsetControl.NET" />
+        <InternalsVisibleTo Include="HeadsetControl.NET.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
+
+</Project>

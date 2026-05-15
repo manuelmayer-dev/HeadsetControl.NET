@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --list-sdks)",
+      "Bash(grep -nA2 \"enum battery_status\\\\|enum microphone_status\\\\|enum capabilities\" /Users/manuelmayer/Repos/HeadsetControl.NET/headsetcontrollib/lib/device.hpp)",
+      "Bash(chmod +x /Users/manuelmayer/Repos/HeadsetControl.NET/build/build-native.sh)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet build *)",
+      "Bash(build/build-native.sh)",
+      "Bash(dotnet test *)",
+      "Bash(DOTNET_LoaderOptimization=DisableMVResolution dotnet test --no-build -c Release --filter \"FullyQualifiedName~Version_IsNonEmpty\" --logger \"console;verbosity=detailed\")",
+      "Bash(dotnet run *)",
+      "Bash(HEADSETCONTROL_NATIVE_TRACE=1 dotnet run -c Release --project samples/HeadsetControl.NET.Sample -- --test)",
+      "Bash(dotnet --info)",
+      "Bash(build/build-native.sh --rid osx-x64)",
+      "Bash(HEADSETCONTROL_NATIVE_TRACE=1 dotnet test --no-build -c Release --filter \"FullyQualifiedName~Version_IsNonEmpty\" --logger \"console;verbosity=detailed\")",
+      "Bash(dotnet clean *)"
+    ]
+  }
+}
