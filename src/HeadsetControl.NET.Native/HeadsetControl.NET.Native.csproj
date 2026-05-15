@@ -25,9 +25,15 @@
         binary for their target RID.
     -->
     <ItemGroup>
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/libheadsetcontrol.dylib" />
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/libheadsetcontrol.so" />
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/headsetcontrol.dll" />
+        <!--
+            Pick up the main shared library and any bundled transitive runtime
+            dependencies (notably hidapi.dll on Windows, which vcpkg installs
+            separately). The build script is responsible for placing only the
+            files we want shipped into build/native/<rid>/.
+        -->
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.dylib" />
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.so" />
+        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.dll" />
 
         <Content Include="@(_HscNativeArtifact)"
                  Link="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)"

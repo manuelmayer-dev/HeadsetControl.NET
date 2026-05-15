@@ -1,0 +1,238 @@
+name: CI
+
+# Three-stage pipeline:
+#   1. build-native  — cross-compile the HeadsetControl C/C++ shared library
+#                      for every supported RID, each on its native runner.
+#   2. test          — restore native artefacts and run the .NET test suite
+#                      against each RID.
+#   3. pack          — collect every RID's native binary into a single set of
+#                      NuGet packages (HeadsetControl.NET + .Native).
+#
+# Stages execute sequentially via `needs:`; jobs inside a stage run in parallel.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  # Route vcpkg's binary cache through GitHub Actions cache on Windows so
+  # repeated hidapi installs are cheap.
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
+jobs:
+
+  # ===========================================================================
+  # Stage 1 — Build the native library for each supported runtime identifier.
+  # ===========================================================================
+  build-native:
+    name: Build native (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: osx-arm64
+            os: macos-14
+          - rid: linux-x64
+            os: ubuntu-24.04
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+          - rid: win-x64
+            os: windows-2022
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # `git describe --tags` inside the C library uses tags to derive
+          # the version string; fetching the full history keeps that meaningful.
+          fetch-depth: 0
+
+      - name: Install hidapi (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hidapi
+
+      - name: Install hidapi + toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential pkg-config libhidapi-dev
+
+      # vcpkg manifest mode is wired up via the repo's vcpkg.json. The runner
+      # image ships vcpkg pre-installed at $VCPKG_INSTALLATION_ROOT.
+      - name: Configure vcpkg (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Set vcpkg toolchain (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "CMAKE_EXTRA_ARGS=-DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT//\\//}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows" >> "$GITHUB_ENV"
+
+      # Cache the CMake build directory keyed on the submodule sources so
+      # incremental builds skip the (~2 minute) configure step.
+      - name: Cache CMake build dir
+        uses: actions/cache@v4
+        with:
+          path: build/cmake/${{ matrix.rid }}
+          key: cmake-${{ matrix.rid }}-${{ hashFiles('headsetcontrollib/CMakeLists.txt', 'headsetcontrollib/lib/**/*.cpp', 'headsetcontrollib/lib/**/*.hpp', 'headsetcontrollib/lib/**/*.h', 'headsetcontrollib/vcpkg.json') }}
+          restore-keys: |
+            cmake-${{ matrix.rid }}-
+
+      - name: Build native library
+        shell: bash
+        run: build/build-native.sh --rid ${{ matrix.rid }}
+
+      - name: Upload native artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.rid }}
+          path: build/native/${{ matrix.rid }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  # ===========================================================================
+  # Stage 2 — Restore the matching native artefact and run the test suite.
+  # ===========================================================================
+  test:
+    name: Test (${{ matrix.rid }})
+    needs: build-native
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: osx-arm64
+            os: macos-14
+          - rid: linux-x64
+            os: ubuntu-24.04
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+          - rid: win-x64
+            os: windows-2022
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # libheadsetcontrol dynamically links against system hidapi on Linux and
+      # macOS — install just the runtime library on the test host.
+      - name: Install hidapi runtime (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hidapi
+
+      - name: Install hidapi runtime (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libhidapi-hidraw0 libhidapi-libusb0
+
+      - name: Download native artefact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-${{ matrix.rid }}
+          path: build/native/${{ matrix.rid }}/
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: >-
+          dotnet test -c Release --no-build
+          --logger "console;verbosity=normal"
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.rid }}
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ===========================================================================
+  # Stage 3 — Combine every RID's native binary into NuGet packages.
+  # ===========================================================================
+  pack:
+    name: Pack NuGet
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download all native artefacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: artifacts/
+
+      # `download-artifact` unpacks each artefact into its own folder. Reshape
+      # the tree into build/native/<rid>/ so the csproj wildcards pick every
+      # RID up automatically.
+      - name: Reorganise native artefacts
+        run: |
+          mkdir -p build/native
+          for dir in artifacts/native-*/; do
+            rid="$(basename "$dir" | sed 's/^native-//')"
+            mkdir -p "build/native/$rid"
+            cp -R "$dir"* "build/native/$rid/"
+            echo "Contents of build/native/$rid:"
+            ls -la "build/native/$rid"
+          done
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Pack
+        run: |
+          dotnet pack src/HeadsetControl.NET.Native/HeadsetControl.NET.Native.csproj \
+            -c Release --no-restore -o nupkgs
+          dotnet pack src/HeadsetControl.NET/HeadsetControl.NET.csproj \
+            -c Release --no-restore -o nupkgs
+
+      - name: Upload NuGet packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs
+          path: nupkgs/
+          if-no-files-found: error
+          retention-days: 30

@@ -14,7 +14,11 @@
       "Bash(dotnet --info)",
       "Bash(build/build-native.sh --rid osx-x64)",
       "Bash(HEADSETCONTROL_NATIVE_TRACE=1 dotnet test --no-build -c Release --filter \"FullyQualifiedName~Version_IsNonEmpty\" --logger \"console;verbosity=detailed\")",
-      "Bash(dotnet clean *)"
+      "Bash(dotnet clean *)",
+      "Bash(yamllint .github/workflows/ci.yml)",
+      "Bash(python3 -c \"import yaml,sys;yaml.safe_load\\(open\\('.github/workflows/ci.yml'\\)\\);print\\('YAML ok'\\)\")",
+      "Bash(python3 -c \"import json; import subprocess; r = subprocess.run\\(['python3','-c','exec\\(open\\(\\\\\"/dev/stdin\\\\\"\\).read\\(\\)\\)'],input=b\\\\\"import sys;sys.path.insert\\(0,'/usr/local/lib/python3/dist-packages'\\)\\\\\",capture_output=True\\);print\\(r.returncode\\)\")",
+      "Bash(ruby -ryaml -e \"YAML.load_file\\('.github/workflows/ci.yml'\\); puts 'YAML ok'\")"
     ]
   }
 }

@@ -46,9 +46,13 @@ OUT_DIR="${OUT_ROOT}/${RID}"
 mkdir -p "${BUILD_DIR}" "${OUT_DIR}"
 
 echo ">> Configuring native HeadsetControl for ${RID}"
+# CMAKE_EXTRA_ARGS lets CI pass additional flags (e.g. the vcpkg toolchain
+# file on Windows) without modifying this script.
+# shellcheck disable=SC2086
 cmake -S "${NATIVE_SRC}" -B "${BUILD_DIR}" \
     -DBUILD_SHARED_LIBRARY=ON \
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=Release \
+    ${CMAKE_EXTRA_ARGS:-}
 
 echo ">> Building"
 cmake --build "${BUILD_DIR}" --config Release --target headsetcontrol_shared
@@ -66,7 +70,25 @@ case "${RID}" in
         cp "${SRC}" "${OUT_DIR}/libheadsetcontrol.so"
         ;;
     win-*)
-        cp "${BUILD_DIR}/headsetcontrol.dll" "${OUT_DIR}/headsetcontrol.dll"
+        # MSVC's default generator is multi-config and places binaries in
+        # <BUILD_DIR>/Release/. Single-config generators (Ninja, Makefiles)
+        # put them in <BUILD_DIR>/. Locate the artefact either way and
+        # exclude vcpkg's installed copies so we always pick our own build.
+        SRC=$(find "${BUILD_DIR}" -maxdepth 3 -name "headsetcontrol.dll" \
+              -not -path "*/vcpkg_installed/*" 2>/dev/null | head -n1)
+        if [[ -z "${SRC}" ]]; then
+            echo "error: built headsetcontrol.dll not found under ${BUILD_DIR}" >&2
+            exit 1
+        fi
+        cp "${SRC}" "${OUT_DIR}/headsetcontrol.dll"
+
+        # Bundle the hidapi runtime DLL from vcpkg's installed tree so that
+        # consumers can load the library without a separate hidapi install.
+        HIDAPI=$(find "${BUILD_DIR}/vcpkg_installed" -name "hidapi.dll" 2>/dev/null | head -n1)
+        if [[ -n "${HIDAPI}" ]]; then
+            cp "${HIDAPI}" "${OUT_DIR}/hidapi.dll"
+            echo ">> Bundled hidapi.dll from ${HIDAPI}"
+        fi
         ;;
     *)
         echo "error: don't know how to copy artefacts for ${RID}" >&2
