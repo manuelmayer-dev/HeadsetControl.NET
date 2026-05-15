@@ -8,9 +8,12 @@
   "additionalReviewers": [
     "@manuelmayer-dev"
   ],
-  "cloneSubmodules": true,
   "git-submodules": {
-    "enabled": true
+    "enabled": true,
+    "versioning": "git",
+    "managerFilePatterns": [
+      "/(^|/)\\.gitmodules$/"
+    ]
   },
   "packageRules": [
     {
