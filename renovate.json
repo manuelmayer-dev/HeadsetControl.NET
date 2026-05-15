@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "stabilityDays": 14,
+  "prHourlyLimit": 5,
+  "extends": [
+    "config:recommended"
+  ],
+  "additionalReviewers": [
+    "@manuelmayer-dev"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "node",
+        "npm"
+      ],
+      "enabled": false
+    },
+    {
+      "matchDatasources": [
+        "dotnet"
+      ],
+      "groupName": "dotnet",
+      "stabilityDays": 0
+    },
+    {
+      "matchManagers": [
+        "git-submodules"
+      ],
+      "matchSourceUrlPrefixes": [
+        "https://github.com/Sapd/HeadsetControl"
+      ],
+      "groupName": "headsetcontrol",
+      "stabilityDays": 3
+    }
+  ]
+}
