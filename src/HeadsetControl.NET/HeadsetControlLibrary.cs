@@ -13,8 +13,7 @@ public static class HeadsetControlLibrary
         NativeLibraryLoader.EnsureInitialized();
     }
 
-    public static string Version
-        => NativeStringMarshaller.PtrToString(NativeMethods.Version()) ?? "0.0.0";
+    public static string Version => NativeStringMarshaller.PtrToString(NativeMethods.Version()) ?? "0.0.0";
 
     public static TimeSpan DeviceTimeout
     {
@@ -26,8 +25,8 @@ public static class HeadsetControlLibrary
                 throw new ArgumentOutOfRangeException(nameof(value), value, "Timeout must be non-negative.");
             }
 
-            double ms = value.TotalMilliseconds;
-            int clamped = ms >= int.MaxValue ? int.MaxValue : (int)ms;
+            var ms = value.TotalMilliseconds;
+            var clamped = ms >= int.MaxValue ? int.MaxValue : (int)ms;
             NativeMethods.SetDeviceTimeout(clamped);
         }
     }
@@ -54,14 +53,14 @@ public static class HeadsetControlLibrary
     {
         get
         {
-            int count = NativeMethods.SupportedDeviceCount();
+            var count = NativeMethods.SupportedDeviceCount();
             if (count <= 0)
             {
                 return Array.Empty<string>();
             }
 
             var names = new string[count];
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 names[i] = NativeStringMarshaller.PtrToStringOrEmpty(NativeMethods.SupportedDeviceName(i));
             }
@@ -72,7 +71,7 @@ public static class HeadsetControlLibrary
 
     public static HeadsetCollection Discover()
     {
-        int count = NativeMethods.Discover(out IntPtr nativeArray);
+        var count = NativeMethods.Discover(out var nativeArray);
 
         if (count < 0)
         {

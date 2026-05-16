@@ -1,3 +1,4 @@
+using HeadsetControl.NET.Exceptions;
 using HeadsetControl.NET.Internal;
 using HeadsetControl.NET.Native;
 
@@ -14,7 +15,7 @@ public sealed class ResultMappingTests
     [Fact]
     public void ThrowIfError_NotSupported_ThrowsFeatureNotSupported()
     {
-        FeatureNotSupportedException ex = Assert.Throws<FeatureNotSupportedException>(
+        var ex = Assert.Throws<FeatureNotSupportedException>(
             () => ResultMapping.ThrowIfError(HscResult.NotSupported, "op", HeadsetCapability.Sidetone));
 
         Assert.Equal(HeadsetCapability.Sidetone, ex.Capability);
@@ -24,7 +25,7 @@ public sealed class ResultMappingTests
     [Fact]
     public void ThrowIfError_NotSupported_WithoutCapability_StillThrows()
     {
-        FeatureNotSupportedException ex = Assert.Throws<FeatureNotSupportedException>(
+        var ex = Assert.Throws<FeatureNotSupportedException>(
             () => ResultMapping.ThrowIfError(HscResult.NotSupported, "op"));
 
         Assert.Null(ex.Capability);
@@ -33,7 +34,7 @@ public sealed class ResultMappingTests
     [Fact]
     public void ThrowIfError_DeviceOffline_ThrowsDeviceOffline()
     {
-        DeviceOfflineException ex = Assert.Throws<DeviceOfflineException>(
+        var ex = Assert.Throws<DeviceOfflineException>(
             () => ResultMapping.ThrowIfError(HscResult.DeviceOffline, "op"));
 
         Assert.Equal(HeadsetControlErrorCode.DeviceOffline, ex.ErrorCode);
@@ -63,7 +64,7 @@ public sealed class ResultMappingTests
     [Fact]
     public void ThrowIfError_GenericError_ThrowsBaseException()
     {
-        HeadsetControlException ex = Assert.Throws<HeadsetControlException>(
+        var ex = Assert.Throws<HeadsetControlException>(
             () => ResultMapping.ThrowIfError(HscResult.Error, "op"));
 
         Assert.Equal(HeadsetControlErrorCode.Error, ex.ErrorCode);

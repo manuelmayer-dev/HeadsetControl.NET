@@ -1,3 +1,5 @@
+using HeadsetControl.NET.Exceptions;
+
 namespace HeadsetControl.NET.Tests;
 
 public sealed class DomainTypeTests

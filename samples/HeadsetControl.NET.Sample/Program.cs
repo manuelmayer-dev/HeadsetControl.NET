@@ -1,6 +1,7 @@
 using HeadsetControl.NET;
+using HeadsetControl.NET.Exceptions;
 
-bool useTestDevice = args.Contains("--test", StringComparer.OrdinalIgnoreCase);
+var useTestDevice = args.Contains("--test", StringComparer.OrdinalIgnoreCase);
 
 Console.WriteLine($"HeadsetControl native version: {HeadsetControlLibrary.Version}");
 Console.WriteLine($"Supported device models: {HeadsetControlLibrary.SupportedDeviceCount}");
@@ -13,7 +14,7 @@ if (useTestDevice)
     Console.WriteLine();
 }
 
-using HeadsetCollection headsets = HeadsetControlLibrary.Discover();
+using var headsets = HeadsetControlLibrary.Discover();
 
 if (headsets.Count == 0)
 {
@@ -21,9 +22,9 @@ if (headsets.Count == 0)
     return 0;
 }
 
-for (int i = 0; i < headsets.Count; i++)
+for (var i = 0; i < headsets.Count; i++)
 {
-    Headset headset = headsets[i];
+    var headset = headsets[i];
 
     Console.WriteLine($"[{i}] {headset}");
     Console.WriteLine($"     Vendor : {headset.VendorName ?? "(unknown)"} (0x{headset.VendorId:X4})");
@@ -47,8 +48,8 @@ static void TryReadBattery(Headset headset)
 
     try
     {
-        BatteryInfo battery = headset.GetBattery();
-        string level = battery.LevelPercent is int pct ? $"{pct}%" : "n/a";
+        var battery = headset.GetBattery();
+        var level = battery.LevelPercent is int pct ? $"{pct}%" : "n/a";
         Console.WriteLine($"     Battery: {battery.Status} ({level})");
     }
     catch (HeadsetControlException ex)
@@ -66,7 +67,7 @@ static void TryReadChatMix(Headset headset)
 
     try
     {
-        ChatMixInfo mix = headset.GetChatMix();
+        var mix = headset.GetChatMix();
         Console.WriteLine($"     ChatMix: level={mix.Level} game={mix.GameVolumePercent}% chat={mix.ChatVolumePercent}%");
     }
     catch (HeadsetControlException ex)

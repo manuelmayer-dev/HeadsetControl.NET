@@ -11,19 +11,15 @@
 
         <Description>Native P/Invoke bindings for the HeadsetControl C library. Internal infrastructure for HeadsetControl.NET — application code should consume HeadsetControl.NET instead.</Description>
         <PackageId>HeadsetControl.NET.Native</PackageId>
+
+        <!--
+            If the host-RID native library is missing at build time, invoke
+            build/build-native.sh automatically. Disable by setting
+            /p:HscBuildNativeIfMissing=false (CI does this implicitly because
+            the matrix build job already produces the artefacts).
+        -->
+        <HscBuildNativeIfMissing Condition="'$(HscBuildNativeIfMissing)' == ''">true</HscBuildNativeIfMissing>
     </PropertyGroup>
-
-    <ItemGroup>
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.dylib" />
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.so" />
-        <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)../../build/native/**/*.dll" />
-
-        <Content Include="@(_HscNativeArtifact)"
-                 Link="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)"
-                 CopyToOutputDirectory="PreserveNewest"
-                 Pack="true"
-                 PackagePath="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)" />
-    </ItemGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="HeadsetControl.NET" />
@@ -33,5 +29,48 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     </ItemGroup>
+
+    <Target Name="HscPrepareNativeArtifacts"
+            BeforeTargets="AssignTargetPaths;_GetPackageFiles"
+            Condition="'$(DesignTimeBuild)' != 'true'">
+
+        <PropertyGroup>
+            <_HscOs Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx</_HscOs>
+            <_HscOs Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</_HscOs>
+            <_HscOs Condition="$([MSBuild]::IsOSPlatform('Windows'))">win</_HscOs>
+
+            <_HscArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X64'">x64</_HscArch>
+            <_HscArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'Arm64'">arm64</_HscArch>
+
+            <_HscHostRid>$(_HscOs)-$(_HscArch)</_HscHostRid>
+
+            <_HscNativeName Condition="'$(_HscOs)' == 'win'">headsetcontrol.dll</_HscNativeName>
+            <_HscNativeName Condition="'$(_HscOs)' == 'osx'">libheadsetcontrol.dylib</_HscNativeName>
+            <_HscNativeName Condition="'$(_HscOs)' == 'linux'">libheadsetcontrol.so</_HscNativeName>
+
+            <_HscNativeHostPath>$(MSBuildThisFileDirectory)..\..\build\native\$(_HscHostRid)\$(_HscNativeName)</_HscNativeHostPath>
+            <_HscBuildScript>$(MSBuildThisFileDirectory)..\..\build\build-native.sh</_HscBuildScript>
+        </PropertyGroup>
+
+        <Message Importance="high"
+                 Text="HeadsetControl: building native library for $(_HscHostRid)..."
+                 Condition="'$(HscBuildNativeIfMissing)' == 'true' AND !Exists('$(_HscNativeHostPath)')" />
+
+        <Exec Command="bash &quot;$(_HscBuildScript)&quot; --rid $(_HscHostRid)"
+              WorkingDirectory="$(MSBuildThisFileDirectory)..\.."
+              Condition="'$(HscBuildNativeIfMissing)' == 'true' AND !Exists('$(_HscNativeHostPath)')" />
+
+        <ItemGroup>
+            <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)..\..\build\native\**\*.dylib" />
+            <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)..\..\build\native\**\*.so" />
+            <_HscNativeArtifact Include="$(MSBuildThisFileDirectory)..\..\build\native\**\*.dll" />
+
+            <Content Include="@(_HscNativeArtifact)"
+                     Link="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)"
+                     CopyToOutputDirectory="PreserveNewest"
+                     Pack="true"
+                     PackagePath="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)" />
+        </ItemGroup>
+    </Target>
 
 </Project>

@@ -1,8 +1,9 @@
+using HeadsetControl.NET.Exceptions;
 using HeadsetControl.NET.Native;
 
 namespace HeadsetControl.NET.Internal;
 
-internal static class ResultMapping
+static class ResultMapping
 {
     public static void ThrowIfError(HscResult result, string operation, HeadsetCapability? capability = null)
     {
@@ -44,7 +45,7 @@ internal static class ResultMapping
     // current pass-through behaviour.
     public static BatteryStatus MapBatteryStatus(HscBatteryStatus raw)
     {
-        int value = (int)raw;
+        var value = (int)raw;
         return value switch
         {
             -1 => BatteryStatus.Unavailable,

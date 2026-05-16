@@ -35,12 +35,8 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
 
-  build-native:
-    needs: version
-    uses: ./.github/workflows/reusable-build-native.yml
-
   test:
-    needs: [version, build-native]
+    needs: version
     uses: ./.github/workflows/reusable-test.yml
 
   pack:

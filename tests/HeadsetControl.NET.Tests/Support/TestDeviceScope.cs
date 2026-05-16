@@ -1,6 +1,11 @@
 namespace HeadsetControl.NET.Tests.Support;
 
-internal sealed class TestDeviceScope : IDisposable
+/// <summary>
+/// Enables the synthetic HeadsetControl Test device for the lifetime of the
+/// scope and restores the previous state on disposal. Keeps tests from
+/// leaking global library state into each other.
+/// </summary>
+sealed class TestDeviceScope : IDisposable
 {
     private readonly bool _previousEnabled;
     private readonly int _previousProfile;

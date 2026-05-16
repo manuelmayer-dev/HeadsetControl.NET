@@ -1,6 +1,6 @@
 namespace HeadsetControl.NET.Native;
 
-internal enum HscResult
+enum HscResult
 {
     Ok = 0,
     Error = -1,
@@ -11,7 +11,7 @@ internal enum HscResult
     InvalidParam = -6,
 }
 
-internal enum HscCapability
+enum HscCapability
 {
     Sidetone = 0,
     BatteryStatus = 1,
@@ -34,7 +34,7 @@ internal enum HscCapability
 // The native C wrapper currently forwards the underlying C++ battery_status
 // enum (0..4) through a static cast, so callers may receive either these
 // constants or the C++ values. ResultMapping handles both.
-internal enum HscBatteryStatus
+enum HscBatteryStatus
 {
     Unavailable = -1,
     Charging = -2,
