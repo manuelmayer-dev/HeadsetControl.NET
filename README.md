@@ -6,7 +6,10 @@
 .NET 10 wrapper for the [HeadsetControl](https://github.com/Sapd/HeadsetControl)
 C/C++ library. Sidetone, battery, equalizer, lights, chat-mix, the lot.
 
-Runs on `osx-arm64`, `linux-arm64`, `linux-x64`, `win-x64`.
+Native binaries are shipped for `osx-arm64`, `osx-x64`, `linux-arm64`,
+`linux-x64`, `win-x64`. On Apple Silicon Macs make sure you're using a native
+arm64 `dotnet` — Intel `dotnet` under Rosetta reports `osx-x64` and will pull
+the x64 binary instead.
 
 ## Layout
 

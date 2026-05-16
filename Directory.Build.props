@@ -36,11 +36,11 @@
         <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Version>0.3.0</Version>
+        <Version>0.4.0</Version>
     </PropertyGroup>
 
     <PropertyGroup>
-        <SupportedRuntimeIdentifiers>osx-arm64;linux-arm64;linux-x64;win-x64</SupportedRuntimeIdentifiers>
+        <SupportedRuntimeIdentifiers>osx-arm64;osx-x64;linux-arm64;linux-x64;win-x64</SupportedRuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
