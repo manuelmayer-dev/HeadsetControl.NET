@@ -44,6 +44,37 @@ BUILD_DIR="${BUILD_ROOT}/${RID}"
 OUT_DIR="${OUT_ROOT}/${RID}"
 mkdir -p "${BUILD_DIR}" "${OUT_DIR}"
 
+# Serialise concurrent invocations for the same RID — when this script is
+# wired into a multi-targeted .NET build, MSBuild may run it in parallel for
+# each TFM, and the inner CMake build directory is not concurrency-safe.
+# `mkdir` is atomic across processes, so we use a sentinel directory as the
+# lock. The first process builds; later ones wait, then exit early once the
+# artefact is in place.
+LOCK_DIR="${BUILD_DIR}.lock"
+trap 'rmdir "${LOCK_DIR}" 2>/dev/null || true' EXIT
+
+WAITED=0
+while ! mkdir "${LOCK_DIR}" 2>/dev/null; do
+    if [[ ${WAITED} -ge 600 ]]; then
+        echo "error: timed out waiting for ${LOCK_DIR}" >&2
+        exit 1
+    fi
+    sleep 1
+    WAITED=$((WAITED + 1))
+done
+
+case "${RID}" in
+    osx-*)  EXPECTED="${OUT_DIR}/libheadsetcontrol.dylib" ;;
+    linux-*) EXPECTED="${OUT_DIR}/libheadsetcontrol.so"   ;;
+    win-*)  EXPECTED="${OUT_DIR}/headsetcontrol.dll"      ;;
+    *)      EXPECTED=""                                    ;;
+esac
+
+if [[ -n "${EXPECTED}" && -f "${EXPECTED}" ]]; then
+    echo ">> ${EXPECTED} already present, skipping build"
+    exit 0
+fi
+
 echo ">> Configuring native HeadsetControl for ${RID}"
 # shellcheck disable=SC2086
 cmake -S "${NATIVE_SRC}" -B "${BUILD_DIR}" \
