@@ -75,11 +75,21 @@ if [[ -n "${EXPECTED}" && -f "${EXPECTED}" ]]; then
     exit 0
 fi
 
+# Pin the macOS architecture so the produced dylib matches the target RID
+# even when CMake/CMake's host detection would otherwise pick a different
+# arch (e.g. running under Rosetta).
+case "${RID}" in
+    osx-arm64) RID_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64"  ;;
+    osx-x64)   RID_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=x86_64" ;;
+    *)         RID_CMAKE_ARGS=""                                  ;;
+esac
+
 echo ">> Configuring native HeadsetControl for ${RID}"
 # shellcheck disable=SC2086
 cmake -S "${NATIVE_SRC}" -B "${BUILD_DIR}" \
     -DBUILD_SHARED_LIBRARY=ON \
     -DCMAKE_BUILD_TYPE=Release \
+    ${RID_CMAKE_ARGS} \
     ${CMAKE_EXTRA_ARGS:-}
 
 echo ">> Building"
@@ -88,12 +98,62 @@ cmake --build "${BUILD_DIR}" --config Release --target headsetcontrol_shared
 case "${RID}" in
     osx-*)
         cp "${BUILD_DIR}/libheadsetcontrol.dylib" "${OUT_DIR}/libheadsetcontrol.dylib"
+
+        # Bundle the hidapi dylib next to libheadsetcontrol and rewrite the
+        # absolute install_name reference to a relative @loader_path lookup,
+        # so consumers don't need brew install hidapi at runtime.
+        for DEP in $(otool -L "${OUT_DIR}/libheadsetcontrol.dylib" | awk 'NR>1 {print $1}' | grep -E 'libhidapi[^/]*\.dylib$'); do
+            DEP_NAME=$(basename "${DEP}")
+            if [[ -f "${DEP}" ]]; then
+                cp -L "${DEP}" "${OUT_DIR}/${DEP_NAME}"
+                chmod u+w "${OUT_DIR}/${DEP_NAME}"
+                install_name_tool -change "${DEP}" "@loader_path/${DEP_NAME}" \
+                    "${OUT_DIR}/libheadsetcontrol.dylib"
+                install_name_tool -id "@loader_path/${DEP_NAME}" "${OUT_DIR}/${DEP_NAME}" 2>/dev/null || true
+                # install_name_tool invalidates the existing code signature;
+                # re-sign with an ad-hoc identity so dyld accepts the lib on
+                # hardened-runtime hosts.
+                codesign --force --sign - "${OUT_DIR}/${DEP_NAME}" 2>/dev/null || true
+                echo ">> Bundled ${DEP_NAME} from ${DEP}"
+            else
+                echo "error: hidapi dependency ${DEP} not found, package would not be self-contained" >&2
+                exit 1
+            fi
+        done
+        codesign --force --sign - "${OUT_DIR}/libheadsetcontrol.dylib" 2>/dev/null || true
+
+        # Fail the build if any absolute path remains in the dependency list.
+        REMAINING=$(otool -L "${OUT_DIR}/libheadsetcontrol.dylib" | awk 'NR>1 {print $1}' | grep -E '^/(opt|usr/local|Users)' || true)
+        if [[ -n "${REMAINING}" ]]; then
+            echo "error: libheadsetcontrol.dylib still references absolute paths:" >&2
+            echo "${REMAINING}" >&2
+            exit 1
+        fi
         ;;
     linux-*)
         # Skip libheadsetcontrol.so.X.Y.Z; copy the SONAME symlink target.
         SRC=$(ls "${BUILD_DIR}/libheadsetcontrol.so"* 2>/dev/null | grep -v '\.so\.[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n1)
         [[ -z "${SRC}" ]] && SRC="${BUILD_DIR}/libheadsetcontrol.so"
         cp "${SRC}" "${OUT_DIR}/libheadsetcontrol.so"
+
+        # Bundle the hidapi .so and set RPATH=$ORIGIN so the loader picks the
+        # adjacent copy instead of relying on a system install.
+        if ! command -v patchelf >/dev/null 2>&1; then
+            echo "error: patchelf required to make the package self-contained on Linux" >&2
+            exit 1
+        fi
+
+        for DEP_NAME in $(patchelf --print-needed "${OUT_DIR}/libheadsetcontrol.so" | grep -E '^libhidapi'); do
+            DEP_PATH=$(ldconfig -p | awk -v n="${DEP_NAME}" '$1 == n {print $NF; exit}')
+            if [[ -n "${DEP_PATH}" && -f "${DEP_PATH}" ]]; then
+                cp -L "${DEP_PATH}" "${OUT_DIR}/${DEP_NAME}"
+                echo ">> Bundled ${DEP_NAME} from ${DEP_PATH}"
+            else
+                echo "error: ${DEP_NAME} not found via ldconfig" >&2
+                exit 1
+            fi
+        done
+        patchelf --set-rpath '$ORIGIN' "${OUT_DIR}/libheadsetcontrol.so"
         ;;
     win-*)
         # MSVC multi-config puts binaries in Release/; Ninja/Make do not.
