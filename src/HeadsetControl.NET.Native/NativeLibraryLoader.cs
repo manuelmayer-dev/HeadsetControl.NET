@@ -3,33 +3,22 @@ using System.Runtime.InteropServices;
 
 namespace HeadsetControl.NET.Native;
 
-internal static class NativeLibraryLoader
+static class NativeLibraryLoader
 {
     public const string LibraryName = "headsetcontrol";
 
-    private static readonly Lock InitLock = new();
-    private static bool _initialized;
+    private static readonly Lazy<bool> Initializer = new(() =>
+    {
+        NativeLibrary.SetDllImportResolver(
+            typeof(NativeLibraryLoader).Assembly,
+            Resolve);
+
+        return true;
+    });
 
     public static void EnsureInitialized()
     {
-        if (_initialized)
-        {
-            return;
-        }
-
-        lock (InitLock)
-        {
-            if (_initialized)
-            {
-                return;
-            }
-
-            NativeLibrary.SetDllImportResolver(
-                typeof(NativeLibraryLoader).Assembly,
-                Resolve);
-
-            _initialized = true;
-        }
+        _ = Initializer.Value;
     }
 
     private static IntPtr Resolve(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
@@ -39,34 +28,34 @@ internal static class NativeLibraryLoader
             return IntPtr.Zero;
         }
 
-        bool trace = string.Equals(
+        var trace = string.Equals(
             Environment.GetEnvironmentVariable("HEADSETCONTROL_NATIVE_TRACE"),
             "1",
             StringComparison.Ordinal);
 
-        foreach (string candidate in EnumerateCandidatePaths())
+        foreach (var candidate in EnumerateCandidatePaths())
         {
             if (trace)
             {
                 Console.Error.WriteLine($"[HeadsetControl.NET] probe: {candidate}");
             }
-            if (NativeLibrary.TryLoad(candidate, out IntPtr handle))
+            if (NativeLibrary.TryLoad(candidate, out var handle))
             {
                 return handle;
             }
         }
 
-        return NativeLibrary.TryLoad(libraryName, assembly, searchPath, out IntPtr fallback)
+        return NativeLibrary.TryLoad(libraryName, assembly, searchPath, out var fallback)
             ? fallback
             : IntPtr.Zero;
     }
 
     private static IEnumerable<string> EnumerateCandidatePaths()
     {
-        string rid = GetRuntimeIdentifier();
-        string fileName = GetNativeFileName();
+        var rid = GetRuntimeIdentifier();
+        var fileName = GetNativeFileName();
 
-        string? baseDir = AppContext.BaseDirectory;
+        var baseDir = AppContext.BaseDirectory;
         if (!string.IsNullOrEmpty(baseDir))
         {
             yield return Path.Combine(baseDir, "runtimes", rid, "native", fileName);
@@ -75,7 +64,7 @@ internal static class NativeLibraryLoader
 
         // Under `dotnet test` BaseDirectory points at the testhost, so also
         // probe the directory of this assembly itself.
-        string? assemblyDir = GetAssemblyDirectory();
+        var assemblyDir = GetAssemblyDirectory();
         if (!string.IsNullOrEmpty(assemblyDir) &&
             !string.Equals(assemblyDir, baseDir, StringComparison.Ordinal))
         {
@@ -90,7 +79,7 @@ internal static class NativeLibraryLoader
         Justification = "Empty Location is checked; the BaseDirectory probe covers single-file.")]
     private static string? GetAssemblyDirectory()
     {
-        string location = typeof(NativeLibraryLoader).Assembly.Location;
+        var location = typeof(NativeLibraryLoader).Assembly.Location;
         return string.IsNullOrEmpty(location) ? null : Path.GetDirectoryName(location);
     }
 
@@ -114,7 +103,7 @@ internal static class NativeLibraryLoader
             osPart = "unknown";
         }
 
-        string archPart = RuntimeInformation.ProcessArchitecture switch
+        var archPart = RuntimeInformation.ProcessArchitecture switch
         {
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
@@ -126,18 +115,8 @@ internal static class NativeLibraryLoader
         return $"{osPart}-{archPart}";
     }
 
-    private static string GetNativeFileName()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return "headsetcontrol.dll";
-        }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return "libheadsetcontrol.dylib";
-        }
-
-        return "libheadsetcontrol.so";
-    }
+    private static string GetNativeFileName() =>
+        OperatingSystem.IsWindows() ? "headsetcontrol.dll" :
+        OperatingSystem.IsMacOS()   ? "libheadsetcontrol.dylib" :
+        "libheadsetcontrol.so";
 }

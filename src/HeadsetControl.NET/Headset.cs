@@ -31,19 +31,8 @@ public sealed class Headset
         CapabilitiesBitmask = NativeMethods.GetCapabilities(handle);
     }
 
-    public IEnumerable<HeadsetCapability> SupportedCapabilities
-    {
-        get
-        {
-            foreach (HeadsetCapability cap in Enum.GetValues<HeadsetCapability>())
-            {
-                if ((CapabilitiesBitmask & (1 << (int)cap)) != 0)
-                {
-                    yield return cap;
-                }
-            }
-        }
-    }
+    public IEnumerable<HeadsetCapability> SupportedCapabilities => Enum.GetValues<HeadsetCapability>()
+        .Where(cap => (CapabilitiesBitmask & 1 << (int)cap) != 0);
 
     public bool Supports(HeadsetCapability capability)
     {
@@ -54,10 +43,10 @@ public sealed class Headset
     public BatteryInfo GetBattery()
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.GetBattery(_handle, out HscBattery raw);
+        var result = NativeMethods.GetBattery(_handle, out var raw);
         ResultMapping.ThrowIfError(result, "GetBattery", HeadsetCapability.BatteryStatus);
 
-        BatteryStatus status = ResultMapping.MapBatteryStatus(raw.Status);
+        var status = ResultMapping.MapBatteryStatus(raw.Status);
         int? level = status == BatteryStatus.Available ? raw.LevelPercent : null;
         Voltage? voltage = raw.VoltageMv >= 0 ? new Voltage(raw.VoltageMv) : null;
         TimeSpan? timeToFull = raw.TimeToFullMin >= 0 ? TimeSpan.FromMinutes(raw.TimeToFullMin) : null;
@@ -69,7 +58,7 @@ public sealed class Headset
     public ChatMixInfo GetChatMix()
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.GetChatMix(_handle, out HscChatMix raw);
+        var result = NativeMethods.GetChatMix(_handle, out var raw);
         ResultMapping.ThrowIfError(result, "GetChatMix", HeadsetCapability.ChatMixStatus);
         return new ChatMixInfo(raw.Level, raw.GameVolumePercent, raw.ChatVolumePercent);
     }
@@ -83,7 +72,7 @@ public sealed class Headset
             throw new ArgumentOutOfRangeException(nameof(level), level, "Sidetone level must be in 0..128.");
         }
 
-        HscResult result = NativeMethods.SetSidetone(_handle, level, out HscSidetone raw);
+        var result = NativeMethods.SetSidetone(_handle, level, out var raw);
         ResultMapping.ThrowIfError(result, "SetSidetone", HeadsetCapability.Sidetone);
         return new SidetoneResult(raw.CurrentLevel, raw.MinLevel, raw.MaxLevel);
     }
@@ -91,14 +80,14 @@ public sealed class Headset
     public void SetVolumeLimiter(bool enabled)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetVolumeLimiter(_handle, enabled);
+        var result = NativeMethods.SetVolumeLimiter(_handle, enabled);
         ResultMapping.ThrowIfError(result, "SetVolumeLimiter", HeadsetCapability.VolumeLimiter);
     }
 
     public void SetEqualizerPreset(byte preset)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetEqualizerPreset(_handle, preset);
+        var result = NativeMethods.SetEqualizerPreset(_handle, preset);
         ResultMapping.ThrowIfError(result, "SetEqualizerPreset", HeadsetCapability.EqualizerPreset);
     }
 
@@ -114,7 +103,7 @@ public sealed class Headset
         {
             fixed (float* p = bands)
             {
-                HscResult result = NativeMethods.SetEqualizer(_handle, p, bands.Length);
+                var result = NativeMethods.SetEqualizer(_handle, p, bands.Length);
                 ResultMapping.ThrowIfError(result, "SetEqualizer", HeadsetCapability.Equalizer);
             }
         }
@@ -123,19 +112,19 @@ public sealed class Headset
     public IReadOnlyList<EqualizerPreset> GetEqualizerPresets()
     {
         ThrowIfHandleInvalid();
-        int count = NativeMethods.GetEqualizerPresetsCount(_handle);
+        var count = NativeMethods.GetEqualizerPresetsCount(_handle);
         if (count <= 0)
         {
             return Array.Empty<EqualizerPreset>();
         }
 
         var presets = new EqualizerPreset[count];
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            string name = NativeStringMarshaller.PtrToStringOrEmpty(
+            var name = NativeStringMarshaller.PtrToStringOrEmpty(
                 NativeMethods.GetEqualizerPresetName(_handle, i));
-            int bandCount = NativeMethods.GetEqualizerPresetBandCount(_handle, i);
-            float[] bands = bandCount > 0 ? new float[bandCount] : Array.Empty<float>();
+            var bandCount = NativeMethods.GetEqualizerPresetBandCount(_handle, i);
+            var bands = bandCount > 0 ? new float[bandCount] : Array.Empty<float>();
 
             if (bandCount > 0)
             {
@@ -143,7 +132,7 @@ public sealed class Headset
                 {
                     fixed (float* p = bands)
                     {
-                        HscResult result = NativeMethods.GetEqualizerPresetBands(_handle, i, p, bandCount);
+                        var result = NativeMethods.GetEqualizerPresetBands(_handle, i, p, bandCount);
                         ResultMapping.ThrowIfError(result, "GetEqualizerPresets");
                     }
                 }
@@ -164,7 +153,7 @@ public sealed class Headset
             throw new ArgumentOutOfRangeException(nameof(volume), volume, "Microphone volume must be in 0..128.");
         }
 
-        HscResult result = NativeMethods.SetMicVolume(_handle, volume);
+        var result = NativeMethods.SetMicVolume(_handle, volume);
         ResultMapping.ThrowIfError(result, "SetMicrophoneVolume", HeadsetCapability.MicrophoneVolume);
     }
 
@@ -177,35 +166,35 @@ public sealed class Headset
             throw new ArgumentOutOfRangeException(nameof(brightness), brightness, "Brightness must be in 0..3.");
         }
 
-        HscResult result = NativeMethods.SetMicMuteLedBrightness(_handle, brightness);
+        var result = NativeMethods.SetMicMuteLedBrightness(_handle, brightness);
         ResultMapping.ThrowIfError(result, "SetMicrophoneMuteLedBrightness", HeadsetCapability.MicrophoneMuteLedBrightness);
     }
 
     public void SetRotateToMute(bool enabled)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetRotateToMute(_handle, enabled);
+        var result = NativeMethods.SetRotateToMute(_handle, enabled);
         ResultMapping.ThrowIfError(result, "SetRotateToMute", HeadsetCapability.RotateToMute);
     }
 
     public void SetLights(bool enabled)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetLights(_handle, enabled);
+        var result = NativeMethods.SetLights(_handle, enabled);
         ResultMapping.ThrowIfError(result, "SetLights", HeadsetCapability.Lights);
     }
 
     public void SetVoicePrompts(bool enabled)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetVoicePrompts(_handle, enabled);
+        var result = NativeMethods.SetVoicePrompts(_handle, enabled);
         ResultMapping.ThrowIfError(result, "SetVoicePrompts", HeadsetCapability.VoicePrompts);
     }
 
     public void PlayNotificationSound(byte soundId)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.PlayNotificationSound(_handle, soundId);
+        var result = NativeMethods.PlayNotificationSound(_handle, soundId);
         ResultMapping.ThrowIfError(result, "PlayNotificationSound", HeadsetCapability.NotificationSound);
     }
 
@@ -213,7 +202,7 @@ public sealed class Headset
     public InactiveTimeResult SetInactiveTime(byte minutes)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetInactiveTime(_handle, minutes, out HscInactiveTime raw);
+        var result = NativeMethods.SetInactiveTime(_handle, minutes, out var raw);
         ResultMapping.ThrowIfError(result, "SetInactiveTime", HeadsetCapability.InactiveTime);
         return new InactiveTimeResult(raw.Minutes, raw.MinMinutes, raw.MaxMinutes);
     }
@@ -221,14 +210,14 @@ public sealed class Headset
     public void SetBluetoothWhenPoweredOn(bool enabled)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetBluetoothWhenPoweredOn(_handle, enabled);
+        var result = NativeMethods.SetBluetoothWhenPoweredOn(_handle, enabled);
         ResultMapping.ThrowIfError(result, "SetBluetoothWhenPoweredOn", HeadsetCapability.BluetoothWhenPoweredOn);
     }
 
     public void SetBluetoothCallVolume(byte volume)
     {
         ThrowIfHandleInvalid();
-        HscResult result = NativeMethods.SetBluetoothCallVolume(_handle, volume);
+        var result = NativeMethods.SetBluetoothCallVolume(_handle, volume);
         ResultMapping.ThrowIfError(result, "SetBluetoothCallVolume", HeadsetCapability.BluetoothCallVolume);
     }
 

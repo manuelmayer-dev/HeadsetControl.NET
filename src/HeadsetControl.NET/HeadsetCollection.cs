@@ -20,9 +20,9 @@ public sealed class HeadsetCollection : IReadOnlyList<Headset>, IDisposable
         _count = count;
         _headsets = new Headset[count];
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            IntPtr handle = Marshal.ReadIntPtr(nativeArray, i * IntPtr.Size);
+            var handle = Marshal.ReadIntPtr(nativeArray, i * IntPtr.Size);
             _headsets[i] = new Headset(this, handle);
         }
     }
@@ -46,11 +46,13 @@ public sealed class HeadsetCollection : IReadOnlyList<Headset>, IDisposable
 
         IsDisposed = true;
 
-        if (_nativeArray != IntPtr.Zero)
+        if (_nativeArray == IntPtr.Zero)
         {
-            NativeMethods.FreeHeadsets(_nativeArray, _count);
-            _nativeArray = IntPtr.Zero;
-            _count = 0;
+            return;
         }
+
+        NativeMethods.FreeHeadsets(_nativeArray, _count);
+        _nativeArray = IntPtr.Zero;
+        _count = 0;
     }
 }

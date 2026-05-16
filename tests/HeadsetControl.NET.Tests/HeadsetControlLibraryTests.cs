@@ -17,7 +17,7 @@ public sealed class HeadsetControlLibraryTests
     {
         Skip.IfNot(_fixture.IsNativeLibraryAvailable, _fixture.LoadError?.Message);
 
-        string version = HeadsetControlLibrary.Version;
+        var version = HeadsetControlLibrary.Version;
         Assert.False(string.IsNullOrWhiteSpace(version));
     }
 
@@ -26,7 +26,7 @@ public sealed class HeadsetControlLibraryTests
     {
         Skip.IfNot(_fixture.IsNativeLibraryAvailable, _fixture.LoadError?.Message);
 
-        TimeSpan original = HeadsetControlLibrary.DeviceTimeout;
+        var original = HeadsetControlLibrary.DeviceTimeout;
         try
         {
             HeadsetControlLibrary.DeviceTimeout = TimeSpan.FromMilliseconds(1234);
@@ -52,7 +52,7 @@ public sealed class HeadsetControlLibraryTests
     {
         Skip.IfNot(_fixture.IsNativeLibraryAvailable, _fixture.LoadError?.Message);
 
-        IReadOnlyList<string> names = HeadsetControlLibrary.SupportedDeviceNames;
+        var names = HeadsetControlLibrary.SupportedDeviceNames;
         Assert.Equal(HeadsetControlLibrary.SupportedDeviceCount, names.Count);
         Assert.All(names, name => Assert.False(string.IsNullOrWhiteSpace(name)));
     }
@@ -63,10 +63,10 @@ public sealed class HeadsetControlLibraryTests
         Skip.IfNot(_fixture.IsNativeLibraryAvailable, _fixture.LoadError?.Message);
 
         using var scope = new TestDeviceScope();
-        using HeadsetCollection headsets = HeadsetControlLibrary.Discover();
+        using var headsets = HeadsetControlLibrary.Discover();
 
         Assert.NotEmpty(headsets);
-        Headset test = headsets.Single(h => h.VendorId == 0xF00B && h.ProductId == 0xA00C);
+        var test = headsets.Single(h => h.VendorId == 0xF00B && h.ProductId == 0xA00C);
         Assert.False(string.IsNullOrWhiteSpace(test.Name));
     }
 
@@ -76,8 +76,8 @@ public sealed class HeadsetControlLibraryTests
         Skip.IfNot(_fixture.IsNativeLibraryAvailable, _fixture.LoadError?.Message);
 
         using var scope = new TestDeviceScope();
-        HeadsetCollection headsets = HeadsetControlLibrary.Discover();
-        Headset test = headsets.First(h => h.VendorId == 0xF00B);
+        var headsets = HeadsetControlLibrary.Discover();
+        var test = headsets.First(h => h.VendorId == 0xF00B);
 
         headsets.Dispose();
 

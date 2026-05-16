@@ -8,7 +8,7 @@ public sealed class NativeLibraryFixture
     {
         try
         {
-            string version = HeadsetControlLibrary.Version;
+            var version = HeadsetControlLibrary.Version;
             IsNativeLibraryAvailable = !string.IsNullOrEmpty(version);
             Version = version;
         }

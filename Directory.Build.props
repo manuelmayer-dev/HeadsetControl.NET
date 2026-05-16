@@ -35,7 +35,8 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <Version>0.2.0</Version>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Version>0.3.0</Version>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -48,6 +49,11 @@
               PackagePath="\"
               Visible="false"
               Condition="Exists('$(MSBuildThisFileDirectory)LICENSE')" />
+        <None Include="$(MSBuildThisFileDirectory)README.md"
+              Pack="true"
+              PackagePath="\"
+              Visible="false"
+              Condition="Exists('$(MSBuildThisFileDirectory)README.md')" />
     </ItemGroup>
 
 </Project>

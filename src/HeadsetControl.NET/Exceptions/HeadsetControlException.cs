@@ -1,4 +1,4 @@
-namespace HeadsetControl.NET;
+namespace HeadsetControl.NET.Exceptions;
 
 public class HeadsetControlException : Exception
 {

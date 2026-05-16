@@ -4,7 +4,7 @@ namespace HeadsetControl.NET.Native;
 
 // Const-char* returns are marshalled as IntPtr and decoded by NativeStringMarshaller
 // so the source generator doesn't free memory the native library still owns.
-internal static partial class NativeMethods
+static partial class NativeMethods
 {
     private const string LibName = NativeLibraryLoader.LibraryName;
 

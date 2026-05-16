@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace HeadsetControl.NET.Native;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct HscBattery
+struct HscBattery
 {
     public int LevelPercent;
     public HscBatteryStatus Status;
@@ -13,7 +13,7 @@ internal struct HscBattery
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct HscSidetone
+struct HscSidetone
 {
     public byte CurrentLevel;
     public byte MinLevel;
@@ -21,7 +21,7 @@ internal struct HscSidetone
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct HscChatMix
+struct HscChatMix
 {
     public int Level;
     public int GameVolumePercent;
@@ -29,7 +29,7 @@ internal struct HscChatMix
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct HscInactiveTime
+struct HscInactiveTime
 {
     public byte Minutes;
     public byte MinMinutes;
