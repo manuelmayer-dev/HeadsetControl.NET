@@ -3,7 +3,7 @@
 # build/native/<rid>/ where the .NET projects pick it up.
 #
 #   build/build-native.sh                 host RID
-#   build/build-native.sh --rid <rid>     osx-arm64, linux-x64, linux-arm64, win-x64
+#   build/build-native.sh --rid <rid>     osx-arm64, osx-x64, linux-x64, linux-arm64, win-x64
 #
 # CMAKE_EXTRA_ARGS is forwarded to the configure step (used by CI to pass the
 # vcpkg toolchain file on Windows).
