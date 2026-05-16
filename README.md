@@ -1,5 +1,8 @@
 # HeadsetControl.NET
 
+[![NuGet](https://img.shields.io/nuget/v/HeadsetControl.NET.svg?logo=nuget)](https://www.nuget.org/packages/HeadsetControl.NET)
+[![NuGet downloads](https://img.shields.io/nuget/dt/HeadsetControl.NET.svg?logo=nuget)](https://www.nuget.org/packages/HeadsetControl.NET)
+
 .NET 10 wrapper for the [HeadsetControl](https://github.com/Sapd/HeadsetControl)
 C/C++ library. Sidetone, battery, equalizer, lights, chat-mix, the lot.
 
