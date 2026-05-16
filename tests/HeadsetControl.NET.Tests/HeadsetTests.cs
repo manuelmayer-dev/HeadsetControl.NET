@@ -1,3 +1,4 @@
+using HeadsetControl.NET.Exceptions;
 using HeadsetControl.NET.Tests.Support;
 
 namespace HeadsetControl.NET.Tests;
@@ -15,7 +16,7 @@ public sealed class HeadsetTests
     private (HeadsetCollection collection, Headset test) OpenTestDevice()
     {
         var collection = HeadsetControlLibrary.Discover();
-        Headset test = collection.First(h => h.VendorId == 0xF00B);
+        var test = collection.First(h => h.VendorId == 0xF00B);
         return (collection, test);
     }
 
@@ -45,9 +46,9 @@ public sealed class HeadsetTests
         var (collection, test) = OpenTestDevice();
         using (collection)
         {
-            foreach (HeadsetCapability cap in Enum.GetValues<HeadsetCapability>())
+            foreach (var cap in Enum.GetValues<HeadsetCapability>())
             {
-                bool bit = (test.CapabilitiesBitmask & (1 << (int)cap)) != 0;
+                var bit = (test.CapabilitiesBitmask & (1 << (int)cap)) != 0;
                 Assert.Equal(bit, test.Supports(cap));
             }
         }
@@ -104,7 +105,7 @@ public sealed class HeadsetTests
             Skip.IfNot(test.Supports(HeadsetCapability.BatteryStatus),
                 "Test device build does not expose battery status.");
 
-            BatteryInfo battery = test.GetBattery();
+            var battery = test.GetBattery();
             Assert.True(Enum.IsDefined(battery.Status));
         }
     }

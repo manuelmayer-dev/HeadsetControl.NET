@@ -11,9 +11,5 @@ permissions:
   contents: read
 
 jobs:
-  build-native:
-    uses: ./.github/workflows/reusable-build-native.yml
-
   test:
-    needs: build-native
     uses: ./.github/workflows/reusable-test.yml

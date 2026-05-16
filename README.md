@@ -20,7 +20,6 @@ headsetcontrollib/               git submodule with the native source
 
 ```bash
 git submodule update --init --recursive
-build/build-native.sh              # host RID — or: --rid linux-x64
 dotnet test -c Release
 ```
 
